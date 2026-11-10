@@ -37,7 +37,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 01",
     itemCount: 6,
     summary: "GENERAL HEALTH CHECKUPS · VETERINARY CONSULTATIONS · DISEASE DIAGNOSIS · ALLERGIES & DIGESTIVE CARE",
-    image: "/assets/clinic/dept1_consultation.jpg",
+    image: "/assets/clinic/consultation-healthcare.jpg",
     subServices: [
       "General Health Checkups",
       "Veterinary Consultations",
@@ -56,7 +56,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 02",
     itemCount: 6,
     summary: "ANTI-RABIES · PUPPY & KITTEN VACCINES · ANNUAL BOOSTERS · DEWORMING · TICK & FLEA PREVENTION",
-    image: "/assets/clinic/dept2_vaccination.jpg",
+    image: "/assets/clinic/vaccination-preventive-care.jpg",
     subServices: [
       "Anti-Rabies Vaccination",
       "Puppy and Kitten Vaccination",
@@ -75,7 +75,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 03",
     itemCount: 6,
     summary: "STERILIZATION & NEUTERING · SPAYING · GENERAL SURGERY · WOUND SUTURING · TUMOUR REMOVAL",
-    image: "/assets/clinic/dept3_surgery.jpg",
+    image: "/assets/clinic/surgery-medical-procedures.jpg",
     subServices: [
       "Sterilization and Neutering",
       "Spaying",
@@ -94,7 +94,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 04",
     itemCount: 6,
     summary: "BLOOD TESTS (CBC) · URINE & STOOL · DIGITAL X-RAY · ULTRASOUND · MICROSCOPIC PATHOLOGY",
-    image: "/assets/clinic/dept4_diagnostic.jpg",
+    image: "/assets/clinic/diagnostic-laboratory.jpg",
     subServices: [
       "Blood Tests",
       "Urine and Stool Tests",
@@ -113,7 +113,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 05",
     itemCount: 6,
     summary: "BATHING & SHAMPOOING · HAIR TRIMMING · NAIL CLIPPING · EAR CLEANING · TEETH CLEANING · COAT CARE",
-    image: "/assets/clinic/dept5_grooming.jpg",
+    image: "/assets/clinic/pet-grooming-hygiene.jpg",
     subServices: [
       "Bathing and Shampooing",
       "Hair Trimming and Styling",
@@ -132,7 +132,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 06",
     itemCount: 6,
     summary: "VETERINARY MEDICINES · PRESCRIPTION MEDICATIONS · SUPPLEMENTS & VITAMINS · FLEA MEDS · DIETS",
-    image: "/assets/clinic/dept6_pharmacy.jpg",
+    image: "/assets/clinic/pet-pharmacy-medication.jpg",
     subServices: [
       "Veterinary Medicines",
       "Prescription Medications",
@@ -151,7 +151,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 07",
     itemCount: 6,
     summary: "EMERGENCY CONSULTATIONS · ACCIDENT & TRAUMA · POISONING MANAGEMENT · IV FLUIDS · HOSPITALIZATION",
-    image: "/assets/clinic/dept7_emergency.jpg",
+    image: "/assets/clinic/emergency-critical-care.jpg",
     subServices: [
       "Emergency Consultations",
       "Accident and Injury Treatment",
@@ -170,7 +170,7 @@ export const CLINIC_CATEGORIES: ClinicCategory[] = [
     tag: "CLINICAL DEPT 08",
     itemCount: 8,
     summary: "DIET COUNSELLING · MATERNITY CARE · DENTAL CHECKUPS · MICROCHIPPING · BOARDING · HOME VISITS",
-    image: "/assets/clinic/dept8_specialized.jpg",
+    image: "/assets/clinic/additional-specialized-services.jpg",
     subServices: [
       "Pet Nutrition and Diet Counselling",
       "Pregnancy Diagnosis and Maternity Care",

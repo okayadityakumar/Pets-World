@@ -1,9 +1,27 @@
 {
   "isLocked": true,
   "websiteBackground": "/assets/wallpaper.jpg",
-  "isWallpaperLocked": false,
+  "isWallpaperLocked": true,
   "storeAccessories": {},
-  "clinicServices": {},
-  "lockedClinicPhotos": {},
-  "lockedAt": "2026-11-10T09:56:06.000Z"
+  "clinicServices": {
+    "consultation-healthcare": "/assets/clinic/consultation-healthcare.jpg",
+    "vaccination-preventive-care": "/assets/clinic/vaccination-preventive-care.jpg",
+    "surgery-medical-procedures": "/assets/clinic/surgery-medical-procedures.jpg",
+    "diagnostic-laboratory": "/assets/clinic/diagnostic-laboratory.jpg",
+    "pet-grooming-hygiene": "/assets/clinic/pet-grooming-hygiene.jpg",
+    "pet-pharmacy-medication": "/assets/clinic/pet-pharmacy-medication.jpg",
+    "emergency-critical-care": "/assets/clinic/emergency-critical-care.jpg",
+    "additional-specialized-services": "/assets/clinic/additional-specialized-services.jpg"
+  },
+  "lockedClinicPhotos": {
+    "consultation-healthcare": true,
+    "vaccination-preventive-care": true,
+    "surgery-medical-procedures": true,
+    "diagnostic-laboratory": true,
+    "pet-grooming-hygiene": true,
+    "pet-pharmacy-medication": true,
+    "emergency-critical-care": true,
+    "additional-specialized-services": true
+  },
+  "lockedAt": "2026-11-10T11:21:00.000Z"
 }
