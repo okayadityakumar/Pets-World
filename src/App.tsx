@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import initialAssetsJson from './data/permanentWebsiteAssets.json';
 import { PermanentAssets, InquiryModalState } from './types';
+import { Camera } from 'lucide-react';
 import { Hero } from './components/Hero';
 import { PetStoreCarousel } from './components/PetStoreCarousel';
 import { PetClinicCarousel } from './components/PetClinicCarousel';
@@ -85,10 +86,65 @@ export default function App() {
     setInquiryModal((prev) => ({ ...prev, isOpen: false }));
   };
 
+  const [isUploadingWallpaper, setIsUploadingWallpaper] = useState(false);
+
+  const handleWallpaperUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingWallpaper(true);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+
+      const res = await fetch('/api/upload-wallpaper', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data, filename: file.name }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        setAssets(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to upload wallpaper:', err);
+    } finally {
+      setIsUploadingWallpaper(false);
+    }
+  };
+
   const wallpaper = assets.websiteBackground || '/assets/wallpaper.jpg';
 
   return (
     <div className="relative min-h-screen w-full bg-[#080d14] text-white overflow-x-hidden selection:bg-white/20 selection:text-white">
+      {/* Website Wallpaper Upload Option (Disappears permanently once uploaded and locked) */}
+      {!assets.isWallpaperLocked && (
+        <div className="fixed top-5 left-5 z-40 animate-in fade-in slide-in-from-top-3 duration-300">
+          <label
+            className="liquid-glass-interactive py-2.5 px-4 rounded-full flex items-center gap-2 cursor-pointer border border-emerald-400/60 hover:border-emerald-300 text-white shadow-2xl bg-black/60 backdrop-blur-xl group transition-all"
+            title="Upload and permanently store website wallpaper into code"
+          >
+            <Camera className="w-3.5 h-3.5 text-emerald-400 group-hover:scale-110 transition-transform" />
+            <span className="small-caps-clean text-[9.5px] tracking-[0.2em] text-white">
+              {isUploadingWallpaper ? 'SAVING WALLPAPER...' : 'EDIT WEBSITE WALLPAPER'}
+            </span>
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={isUploadingWallpaper}
+              onChange={handleWallpaperUpload}
+            />
+          </label>
+        </div>
+      )}
+
       {/* Full-Page Background Wallpaper or Ultra-Clean Zero-Stock Atmospheric Canvas */}
       {wallpaper ? (
         <div
@@ -120,6 +176,7 @@ export default function App() {
         <PetClinicCarousel
           assets={assets}
           onSelectService={handleSelectClinicService}
+          onUpdateAssets={(updated) => setAssets(updated)}
         />
 
         {/* Section 3: Verified Google Reviews Marquee (Box-Free Over Wallpaper) */}

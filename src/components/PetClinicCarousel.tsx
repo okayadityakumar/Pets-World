@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Camera } from 'lucide-react';
 import { CLINIC_CATEGORIES, ClinicCategory, ClinicService } from '../data/clinicData';
 import { PermanentAssets } from '../types';
 import { ClinicCategoryModal } from './ClinicCategoryModal';
@@ -7,13 +7,44 @@ import { ClinicCategoryModal } from './ClinicCategoryModal';
 interface PetClinicCarouselProps {
   assets: PermanentAssets;
   onSelectService?: (service: ClinicService) => void;
+  onUpdateAssets?: (newAssets: PermanentAssets) => void;
 }
 
 export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
   assets,
+  onUpdateAssets,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+
+  const [uploadingClinicId, setUploadingClinicId] = useState<string | null>(null);
+
+  const handleUploadClinicPhoto = async (clinicId: string, file: File) => {
+    setUploadingClinicId(clinicId);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+
+      const res = await fetch('/api/upload-clinic-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clinicId, base64Data, filename: file.name }),
+      });
+      const json = await res.json();
+      if (json.success && json.data && onUpdateAssets) {
+        onUpdateAssets(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to upload clinic box photo:', err);
+    } finally {
+      setUploadingClinicId(null);
+    }
+  };
 
   const offsetRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
@@ -178,7 +209,8 @@ export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
           style={{ transform: 'translate3d(0, 0, 0)' }}
         >
           {repeatedCategories.map((cat, index) => {
-            const cardImage = assets.clinicServices?.[cat.id] || cat.image;
+            const isPhotoLocked = Boolean(assets.lockedClinicPhotos?.[cat.id]);
+            const cardImage = assets.clinicServices?.[cat.id] || (isPhotoLocked ? cat.image : undefined);
 
             return (
               <div
@@ -187,7 +219,7 @@ export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
                 className="w-[290px] sm:w-[330px] aspect-[4/5] rounded-[28px] liquid-glass-interactive p-6 flex flex-col justify-between text-center mx-auto items-center cursor-pointer relative group shrink-0 overflow-hidden"
               >
                 {/* Animal Photo Wallpaper - Crisp, Vibrant & Gently Softened */}
-                {cardImage && (
+                {cardImage ? (
                   <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none -z-10">
                     <img
                       src={cardImage}
@@ -197,6 +229,38 @@ export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
                     />
                     {/* Natural gradient scrim preserving crisp typography */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/60" />
+                  </div>
+                ) : (
+                  <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none -z-10 bg-gradient-to-b from-slate-900/50 via-slate-950/70 to-black/75 border border-white/10" />
+                )}
+
+                {/* Edit Box Photo Control: Disappears permanently once uploaded and locked */}
+                {!isPhotoLocked && (
+                  <div
+                    className="absolute top-3.5 right-3.5 z-30"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <label
+                      className="py-1.5 px-3 rounded-full bg-emerald-500/30 hover:bg-emerald-500/50 border border-emerald-400/60 hover:border-emerald-300 text-white flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-lg transition-all active:scale-95 group/btn"
+                      title="Upload photo for this clinic box (will be permanently stored into code)"
+                    >
+                      <Camera className="w-3 h-3 text-emerald-300 group-hover/btn:scale-110 transition-transform" />
+                      <span className="small-caps-clean text-[8.5px] tracking-wider text-white">
+                        {uploadingClinicId === cat.id ? 'SAVING...' : 'EDIT PHOTO'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingClinicId === cat.id}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleUploadClinicPhoto(cat.id, file);
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
                 )}
 

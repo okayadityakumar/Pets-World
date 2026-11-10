@@ -1,7 +1,9 @@
 {
   "isLocked": true,
   "websiteBackground": "/assets/wallpaper.jpg",
+  "isWallpaperLocked": false,
   "storeAccessories": {},
   "clinicServices": {},
+  "lockedClinicPhotos": {},
   "lockedAt": "2026-11-10T09:56:06.000Z"
 }

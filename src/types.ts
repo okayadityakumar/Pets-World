@@ -6,6 +6,7 @@ export interface PermanentAssets {
   lockedAt: string;
   isWallpaperLocked?: boolean;
   wallpaperLockedAt?: string;
+  lockedClinicPhotos?: Record<string, boolean>;
 }
 
 export interface InquiryModalState {

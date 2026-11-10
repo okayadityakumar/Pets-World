@@ -17,10 +17,15 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Ensure /public/uploads directory exists
+// Ensure /public/uploads and /public/assets/clinic directories exist
 const uploadsDir = path.resolve(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+const clinicAssetsDir = path.resolve(__dirname, 'public/assets/clinic');
+if (!fs.existsSync(clinicAssetsDir)) {
+  fs.mkdirSync(clinicAssetsDir, { recursive: true });
 }
 
 // Serve uploaded assets statically
@@ -40,10 +45,12 @@ const readAssetsManifest = () => {
     console.error('Error reading assets manifest:', err);
   }
   return {
-    isLocked: false,
-    websiteBackground: '',
+    isLocked: true,
+    websiteBackground: '/assets/wallpaper.jpg',
+    isWallpaperLocked: false,
     storeAccessories: {},
     clinicServices: {},
+    lockedClinicPhotos: {},
     lockedAt: '',
   };
 };
@@ -104,6 +111,116 @@ app.post('/api/upload-photo', async (req, res) => {
   } catch (error: any) {
     console.error('Error handling upload:', error);
     return res.status(500).json({ success: false, error: error.message || 'Upload failed' });
+  }
+});
+
+// Dedicated POST /api/upload-wallpaper: Permanently writes wallpaper to code & locks it
+app.post('/api/upload-wallpaper', async (req, res) => {
+  try {
+    const { base64Data } = req.body;
+    if (!base64Data) {
+      return res.status(400).json({ success: false, error: 'No image data provided' });
+    }
+
+    let base64Clean = base64Data;
+    const matches = base64Data.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      base64Clean = matches[2];
+    }
+
+    const buffer = Buffer.from(base64Clean, 'base64');
+
+    // 1. Write permanently to public/assets/wallpaper.jpg
+    const wallpaperPath = path.resolve(__dirname, 'public/assets/wallpaper.jpg');
+    fs.writeFileSync(wallpaperPath, buffer);
+
+    // 2. Write to src/assets/images/wallpaper.jpg if directory exists
+    const srcImagesDir = path.resolve(__dirname, 'src/assets/images');
+    if (fs.existsSync(srcImagesDir)) {
+      fs.writeFileSync(path.resolve(srcImagesDir, 'wallpaper.jpg'), buffer);
+    }
+
+    // 3. Write timestamped backup in uploads
+    const backupPath = path.resolve(uploadsDir, `wallpaper_${Date.now()}.jpg`);
+    fs.writeFileSync(backupPath, buffer);
+
+    // 4. Update manifest permanently into src/data/permanentWebsiteAssets.json
+    const current = readAssetsManifest();
+    const updated = {
+      ...current,
+      websiteBackground: '/assets/wallpaper.jpg',
+      isWallpaperLocked: true,
+      wallpaperLockedAt: new Date().toISOString(),
+    };
+    writeAssetsManifest(updated);
+
+    return res.json({
+      success: true,
+      url: '/assets/wallpaper.jpg',
+      data: updated,
+    });
+  } catch (error: any) {
+    console.error('Error saving wallpaper:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Wallpaper save failed' });
+  }
+});
+
+// Dedicated POST /api/upload-clinic-photo: Permanently writes clinic box photo to code & locks it
+app.post('/api/upload-clinic-photo', async (req, res) => {
+  try {
+    const { clinicId, base64Data } = req.body;
+    if (!clinicId || !base64Data) {
+      return res.status(400).json({ success: false, error: 'clinicId and image data are required' });
+    }
+
+    let mimeType = 'image/jpeg';
+    let base64Clean = base64Data;
+    const matches = base64Data.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      base64Clean = matches[2];
+    }
+
+    let extension = 'jpg';
+    if (mimeType.includes('png')) extension = 'png';
+    else if (mimeType.includes('webp')) extension = 'webp';
+
+    const buffer = Buffer.from(base64Clean, 'base64');
+    const safeClinicId = clinicId.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    // 1. Write permanently to public/assets/clinic/{clinicId}.jpg
+    const clinicFilePath = path.resolve(clinicAssetsDir, `${safeClinicId}.${extension}`);
+    fs.writeFileSync(clinicFilePath, buffer);
+
+    // 2. Write timestamped backup in uploads
+    const backupPath = path.resolve(uploadsDir, `clinic_${safeClinicId}_${Date.now()}.${extension}`);
+    fs.writeFileSync(backupPath, buffer);
+
+    const assetUrl = `/assets/clinic/${safeClinicId}.${extension}`;
+
+    // 3. Update manifest permanently into src/data/permanentWebsiteAssets.json
+    const current = readAssetsManifest();
+    const updated = {
+      ...current,
+      clinicServices: {
+        ...(current.clinicServices || {}),
+        [clinicId]: assetUrl,
+      },
+      lockedClinicPhotos: {
+        ...(current.lockedClinicPhotos || {}),
+        [clinicId]: true,
+      },
+    };
+    writeAssetsManifest(updated);
+
+    return res.json({
+      success: true,
+      url: assetUrl,
+      data: updated,
+    });
+  } catch (error: any) {
+    console.error('Error saving clinic photo:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Clinic photo save failed' });
   }
 });
 
