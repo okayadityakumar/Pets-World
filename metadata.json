@@ -1,0 +1,6 @@
+{
+  "name": "Pets World Pets Care (Pet's Clinic)",
+  "description": "Ultra-clean luxury pet store & veterinary clinic sanctuary at Malahi Pakhri Chowk, 90 Feet Road, Doctors Colony, Kankarbagh, Patna. 4.8★ rated with complete pet accessories, nutrition, clinical care & WhatsApp consultation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
