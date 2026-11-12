@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { ShoppingBag, Search } from 'lucide-react';
+import { ShoppingBag, Search, Camera } from 'lucide-react';
 import { STORE_CATEGORIES, StoreCategory, StoreProduct } from '../data/storeProducts';
 import { PermanentAssets } from '../types';
 import { StoreDepartmentModal, CartItem } from './StoreDepartmentModal';
@@ -9,6 +9,7 @@ interface PetStoreCarouselProps {
   cart: Record<string, CartItem>;
   onUpdateQuantity: (product: StoreProduct, delta: number) => void;
   onClearCart: () => void;
+  onUpdateAssets?: (newAssets: PermanentAssets) => void;
 }
 
 export const PetStoreCarousel: React.FC<PetStoreCarouselProps> = ({
@@ -16,9 +17,39 @@ export const PetStoreCarousel: React.FC<PetStoreCarouselProps> = ({
   cart,
   onUpdateQuantity,
   onClearCart,
+  onUpdateAssets,
 }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+
+  const [uploadingStoreId, setUploadingStoreId] = useState<string | null>(null);
+
+  const handleUploadStorePhoto = async (categoryId: string, file: File) => {
+    setUploadingStoreId(categoryId);
+    try {
+      const reader = new FileReader();
+      const base64Promise = new Promise<string>((resolve, reject) => {
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = reject;
+      });
+      reader.readAsDataURL(file);
+      const base64Data = await base64Promise;
+
+      const res = await fetch('/api/upload-store-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ categoryId, base64Data, filename: file.name }),
+      });
+      const json = await res.json();
+      if (json.success && json.data && onUpdateAssets) {
+        onUpdateAssets(json.data);
+      }
+    } catch (err) {
+      console.error('Failed to upload store box photo:', err);
+    } finally {
+      setUploadingStoreId(null);
+    }
+  };
 
   const offsetRef = useRef<number>(0);
   const isDraggingRef = useRef<boolean>(false);
@@ -220,6 +251,7 @@ export const PetStoreCarousel: React.FC<PetStoreCarouselProps> = ({
               0
             );
 
+            const isPhotoLocked = Boolean(assets.lockedStorePhotos?.[cat.id]);
             const cardImage = assets.storeAccessories?.[cat.id] || cat.image;
 
             return (
@@ -239,6 +271,36 @@ export const PetStoreCarousel: React.FC<PetStoreCarouselProps> = ({
                     />
                     {/* Light natural gradient scrim preserving bright animal colors & crisp text legibility */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/55" />
+                  </div>
+                )}
+
+                {/* Edit Box Photo Control: Disappears permanently once uploaded and locked */}
+                {!isPhotoLocked && (
+                  <div
+                    className="absolute top-3.5 right-3.5 z-30"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <label
+                      className="py-1.5 px-3 rounded-full bg-emerald-500/30 hover:bg-emerald-500/50 border border-emerald-400/60 hover:border-emerald-300 text-white flex items-center gap-1.5 cursor-pointer backdrop-blur-md shadow-lg transition-all active:scale-95 group/btn"
+                      title="Upload photo for this department box (will be permanently stored into code)"
+                    >
+                      <Camera className="w-3 h-3 text-emerald-300 group-hover/btn:scale-110 transition-transform" />
+                      <span className="small-caps-clean text-[8.5px] tracking-wider text-white">
+                        {uploadingStoreId === cat.id ? 'SAVING...' : 'EDIT PHOTO'}
+                      </span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingStoreId === cat.id}
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            handleUploadStorePhoto(cat.id, file);
+                          }
+                        }}
+                      />
+                    </label>
                   </div>
                 )}
 

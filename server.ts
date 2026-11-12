@@ -17,7 +17,7 @@ const PORT = Number(process.env.PORT) || 3000;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// Ensure /public/uploads and /public/assets/clinic directories exist
+// Ensure /public/uploads, /public/assets/clinic, and /public/assets/departments directories exist
 const uploadsDir = path.resolve(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
@@ -26,6 +26,11 @@ if (!fs.existsSync(uploadsDir)) {
 const clinicAssetsDir = path.resolve(__dirname, 'public/assets/clinic');
 if (!fs.existsSync(clinicAssetsDir)) {
   fs.mkdirSync(clinicAssetsDir, { recursive: true });
+}
+
+const deptAssetsDir = path.resolve(__dirname, 'public/assets/departments');
+if (!fs.existsSync(deptAssetsDir)) {
+  fs.mkdirSync(deptAssetsDir, { recursive: true });
 }
 
 // Serve uploaded assets statically
@@ -51,6 +56,7 @@ const readAssetsManifest = () => {
     storeAccessories: {},
     clinicServices: {},
     lockedClinicPhotos: {},
+    lockedStorePhotos: {},
     lockedAt: '',
   };
 };
@@ -146,22 +152,98 @@ app.post('/api/upload-wallpaper', async (req, res) => {
 
     // 4. Update manifest permanently into src/data/permanentWebsiteAssets.json
     const current = readAssetsManifest();
+    const cacheBuster = Date.now();
     const updated = {
       ...current,
-      websiteBackground: '/assets/wallpaper.jpg',
-      isWallpaperLocked: true,
-      wallpaperLockedAt: new Date().toISOString(),
+      websiteBackground: `/assets/wallpaper.jpg?v=${cacheBuster}`,
+      isWallpaperLocked: false, // stays unlocked until user confirms this is the photo they need
     };
     writeAssetsManifest(updated);
 
     return res.json({
       success: true,
-      url: '/assets/wallpaper.jpg',
+      url: `/assets/wallpaper.jpg?v=${cacheBuster}`,
       data: updated,
     });
   } catch (error: any) {
     console.error('Error saving wallpaper:', error);
     return res.status(500).json({ success: false, error: error.message || 'Wallpaper save failed' });
+  }
+});
+
+// Dedicated POST /api/upload-store-photo: Permanently writes store department photo to code & locks it
+app.post('/api/upload-store-photo', async (req, res) => {
+  try {
+    const { categoryId, base64Data } = req.body;
+    if (!categoryId || !base64Data) {
+      return res.status(400).json({ success: false, error: 'categoryId and image data are required' });
+    }
+
+    let mimeType = 'image/jpeg';
+    let base64Clean = base64Data;
+    const matches = base64Data.match(/^data:([A-Za-z-+/]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      base64Clean = matches[2];
+    }
+
+    let extension = 'jpg';
+    if (mimeType.includes('png')) extension = 'png';
+    else if (mimeType.includes('webp')) extension = 'webp';
+
+    const buffer = Buffer.from(base64Clean, 'base64');
+    const safeCategoryId = categoryId.replace(/[^a-zA-Z0-9_-]/g, '_');
+
+    // 1. Write permanently to public/assets/departments/{categoryId}.jpg
+    const deptFilePath = path.resolve(deptAssetsDir, `${safeCategoryId}.${extension}`);
+    fs.writeFileSync(deptFilePath, buffer);
+
+    // 2. Write timestamped backup in uploads
+    const backupPath = path.resolve(uploadsDir, `store_${safeCategoryId}_${Date.now()}.${extension}`);
+    fs.writeFileSync(backupPath, buffer);
+
+    const assetUrl = `/assets/departments/${safeCategoryId}.${extension}?v=${Date.now()}`;
+
+    // 3. Update manifest permanently into src/data/permanentWebsiteAssets.json
+    const current = readAssetsManifest();
+    const updated = {
+      ...current,
+      storeAccessories: {
+        ...(current.storeAccessories || {}),
+        [categoryId]: `/assets/departments/${safeCategoryId}.${extension}`,
+      },
+      lockedStorePhotos: {
+        ...(current.lockedStorePhotos || {}),
+        [categoryId]: true,
+      },
+    };
+    writeAssetsManifest(updated);
+
+    return res.json({
+      success: true,
+      url: assetUrl,
+      data: updated,
+    });
+  } catch (error: any) {
+    console.error('Error saving store department photo:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Store department photo save failed' });
+  }
+});
+
+// Dedicated POST /api/confirm-wallpaper: Permanently locks the background wallpaper and disables edit bar
+app.post('/api/confirm-wallpaper', (req, res) => {
+  try {
+    const current = readAssetsManifest();
+    const updated = {
+      ...current,
+      isWallpaperLocked: true,
+      wallpaperLockedAt: new Date().toISOString(),
+    };
+    writeAssetsManifest(updated);
+    return res.json({ success: true, data: updated });
+  } catch (error: any) {
+    console.error('Error confirming wallpaper:', error);
+    return res.status(500).json({ success: false, error: error.message || 'Confirm failed' });
   }
 });
 

@@ -14,13 +14,12 @@ export const Hero: React.FC<HeroProps> = ({ onOpenSpecialModal }) => {
   };
 
   return (
-    <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 pt-20 pb-16 sm:py-24">
+    <section className="relative min-h-screen w-full flex flex-col items-center justify-center text-center px-6 py-16 sm:py-24">
       {/* Box-Free Center Panel Floating Over Wallpaper */}
       <div className="max-w-4xl mx-auto flex flex-col items-center justify-center text-center">
-        {/* Top Micro Kicker with Rating */}
-        {/* Top Micro Kicker with Rating */}
-        <span className="small-caps-clean text-[9.5px] md:text-[10.5px] text-white mb-3 tracking-[0.25em] drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">
-          4.8★ RATED (116+ REVIEWS) · PREMIER SANCTUARY FOR YOUR PETS · MALAHI PAKHRI CHOWK, 90 FEET ROAD, KANKARBAGH
+        {/* Top Micro Kicker */}
+        <span className="small-caps-clean text-[9.5px] md:text-[10.5px] text-white/90 mb-3 tracking-[0.25em] drop-shadow-[0_1px_4px_rgba(0,0,0,0.95)]">
+          PREMIER SANCTUARY FOR YOUR CHERISHED PETS · P.C. COLONY, KANKARBAGH
         </span>
 
         {/* Fashion Hub style (Font 1: Playfair Roman Display) */}

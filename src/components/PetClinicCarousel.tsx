@@ -210,7 +210,9 @@ export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
         >
           {repeatedCategories.map((cat, index) => {
             const isPhotoLocked = Boolean(assets.lockedClinicPhotos?.[cat.id]);
-            const cardImage = assets.clinicServices?.[cat.id] || (isPhotoLocked ? cat.image : undefined);
+            const cardImage = assets.clinicServices?.[cat.id] || cat.image;
+
+            const isWallpaper = typeof cardImage === 'string' && (cardImage.includes('wallpaper') || cardImage === assets.websiteBackground);
 
             return (
               <div
@@ -218,20 +220,21 @@ export const PetClinicCarousel: React.FC<PetClinicCarouselProps> = ({
                 onClick={() => handleCardClick(cat)}
                 className="w-[290px] sm:w-[330px] aspect-[4/5] rounded-[28px] liquid-glass-interactive p-6 flex flex-col justify-between text-center mx-auto items-center cursor-pointer relative group shrink-0 overflow-hidden"
               >
-                {/* Animal Photo Wallpaper - Crisp, Vibrant & Gently Softened */}
-                {cardImage ? (
+                {/* Specific Clinic Service Photo or Pure Translucent Liquid Glass */}
+                {cardImage && !isWallpaper ? (
                   <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none -z-10">
                     <img
                       src={cardImage}
                       alt={cat.title}
                       loading="lazy"
+                      referrerPolicy="no-referrer"
                       className="w-full h-full object-cover blur-[0.5px] scale-102 opacity-75 group-hover:opacity-90 group-hover:scale-105 transition-all duration-700 ease-out"
                     />
                     {/* Natural gradient scrim preserving crisp typography */}
                     <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/25 to-black/60" />
                   </div>
                 ) : (
-                  <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none -z-10 bg-gradient-to-b from-slate-900/50 via-slate-950/70 to-black/75 border border-white/10" />
+                  <div className="absolute inset-0 rounded-[28px] overflow-hidden pointer-events-none -z-10 bg-white/[0.03] backdrop-blur-md border border-white/10" />
                 )}
 
                 {/* Edit Box Photo Control: Disappears permanently once uploaded and locked */}
