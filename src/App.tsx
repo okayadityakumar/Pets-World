@@ -119,7 +119,6 @@ export default function App() {
           cart={cart}
           onUpdateQuantity={handleUpdateQuantity}
           onClearCart={handleClearCart}
-          onUpdateAssets={(updated) => setAssets(updated)}
         />
 
         {/* Section 2: Explore Our Clinic (10 Clinical Services, Infinite RTL + Touch/Drag) */}
